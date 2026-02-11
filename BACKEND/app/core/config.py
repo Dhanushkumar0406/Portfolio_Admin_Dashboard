@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Union, List
+from pydantic import field_validator, ValidationInfo
 
 
 class Settings(BaseSettings):
@@ -20,11 +21,19 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    BACKEND_CORS_ORIGINS: list = [
+    BACKEND_CORS_ORIGINS: Union[str, List[str]] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8000",
+        "http://localhost:8006",
     ]
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
     # File Upload
     UPLOAD_DIR: str = "uploads"
@@ -41,9 +50,15 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = None
 
+    # Admin User (for initial setup - optional)
+    FIRST_SUPERUSER_EMAIL: Optional[str] = None
+    FIRST_SUPERUSER_PASSWORD: Optional[str] = None
+    FIRST_SUPERUSER_NAME: Optional[str] = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra fields from .env
 
 
 settings = Settings()
