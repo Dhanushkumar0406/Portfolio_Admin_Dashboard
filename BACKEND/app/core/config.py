@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "3D Portfolio API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
+    ENVIRONMENT: str = "development"
 
     # Database
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/portfolio_db"

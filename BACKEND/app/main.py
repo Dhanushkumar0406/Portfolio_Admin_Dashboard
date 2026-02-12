@@ -19,9 +19,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="Backend API for 3D Portfolio with Three.js support",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/api/openapi.json"
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/api/openapi.json" if settings.DEBUG else None,
 )
 
 # CORS Configuration
@@ -55,61 +55,60 @@ async def startup_event():
     ensure_site_content_columns()
     ensure_experience_columns()
 
-    # Ensure a dev/admin user exists for local login.
-    if settings.DEBUG:
-        email = settings.FIRST_SUPERUSER_EMAIL or "admin@example.com"
-        password = settings.FIRST_SUPERUSER_PASSWORD or "admin123"
-        name = settings.FIRST_SUPERUSER_NAME or "Admin User"
-        if password:
-            db = SessionLocal()
-            try:
-                user = db.query(User).filter(User.email == email).first()
-                if user:
-                    # Keep login consistent with .env on dev startup
+    # Seed the first admin user when credentials are provided via env vars.
+    email = settings.FIRST_SUPERUSER_EMAIL
+    password = settings.FIRST_SUPERUSER_PASSWORD
+    name = settings.FIRST_SUPERUSER_NAME or "Admin User"
+    if email and password:
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                if settings.DEBUG:
                     user.hashed_password = get_password_hash(password)
-                    if not user.full_name:
-                        user.full_name = name
-                else:
-                    user = User(
-                        email=email,
-                        hashed_password=get_password_hash(password),
-                        full_name=name,
-                        is_active=True,
-                        is_superuser=True,
-                    )
-                    db.add(user)
-                db.commit()
-
-                # Ensure at least one editable homepage content row exists.
-                active_content = (
-                    db.query(SiteContent)
-                    .filter(SiteContent.is_active.is_(True))
-                    .first()
+                if not user.full_name:
+                    user.full_name = name
+            else:
+                user = User(
+                    email=email,
+                    hashed_password=get_password_hash(password),
+                    full_name=name,
+                    is_active=True,
+                    is_superuser=True,
                 )
-                if not active_content:
-                    db.add(
-                        SiteContent(
-                            user_id=user.id,
-                            name="Default Home",
-                            is_active=True,
-                            display_name=name,
-                            icon_text="3D",
-                            eyebrow_text=f"Hello! I am {name}",
-                            hero_title="A designer who judges a book by its cover.",
-                            hero_subtitle=(
-                                "I build cinematic, interactive experiences for brands and studios."
-                            ),
-                            cta_primary_text="View Work",
-                            cta_primary_link="/projects",
-                            cta_secondary_text="Hire Me",
-                            cta_secondary_link="/contact",
-                        )
+                db.add(user)
+            db.commit()
+
+            # Ensure at least one editable homepage content row exists.
+            active_content = (
+                db.query(SiteContent)
+                .filter(SiteContent.is_active.is_(True))
+                .first()
+            )
+            if not active_content:
+                db.add(
+                    SiteContent(
+                        user_id=user.id,
+                        name="Default Home",
+                        is_active=True,
+                        display_name=name,
+                        icon_text="3D",
+                        eyebrow_text=f"Hello! I am {name}",
+                        hero_title="A designer who judges a book by its cover.",
+                        hero_subtitle=(
+                            "I build cinematic, interactive experiences for brands and studios."
+                        ),
+                        cta_primary_text="View Work",
+                        cta_primary_link="/projects",
+                        cta_secondary_text="Hire Me",
+                        cta_secondary_link="/contact",
                     )
-                    db.commit()
-            finally:
-                db.close()
+                )
+                db.commit()
+        finally:
+            db.close()
     print(f">> Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    print(f">> API Documentation: http://localhost:8006/docs")
+    print(f">> Environment: {settings.ENVIRONMENT}")
     print(f">> Database: Connected")
 
 
@@ -132,10 +131,17 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
+    db_status = "connected"
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception:
+        db_status = "disconnected"
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "unhealthy",
         "version": settings.APP_VERSION,
-        "database": "Post GreSQL is connected"
+        "database": db_status,
     }
 
 

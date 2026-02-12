@@ -20,18 +20,4 @@ email-validator==2.1.0
 
 # File handling
 aiofiles==23.2.1
-python-magic==0.4.27
 Pillow==10.2.0
-
-# CORS
-fastapi-cors==0.0.6
-
-# Testing (Optional)
-pytest==7.4.4
-pytest-asyncio==0.23.3
-httpx==0.26.0
-
-# Development
-black==24.1.1
-flake8==7.0.0
-mypy==1.8.0

@@ -10,7 +10,9 @@ venv/
 
 # Environment variables
 .env
-.env.*
+.env.local
+.env.production
+!.env.example
 
 # Uploads
 uploads/

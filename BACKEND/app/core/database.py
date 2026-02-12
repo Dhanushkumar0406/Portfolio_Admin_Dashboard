@@ -3,18 +3,23 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
+# Fix Render's postgres:// URL to postgresql:// (required by SQLAlchemy 2.0+)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 # Create database engine with appropriate settings based on database type
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     # SQLite-specific configuration
     engine = create_engine(
-        settings.DATABASE_URL,
+        db_url,
         echo=settings.DEBUG,
         connect_args={"check_same_thread": False}  # Allow SQLite to be used with FastAPI
     )
 else:
     # PostgreSQL/other database configuration
     engine = create_engine(
-        settings.DATABASE_URL,
+        db_url,
         echo=settings.DEBUG,
         pool_pre_ping=True,
         pool_size=10,

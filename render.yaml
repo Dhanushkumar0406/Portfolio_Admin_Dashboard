@@ -1,0 +1,44 @@
+databases:
+  - name: portfolio-db
+    plan: free
+    databaseName: portfolio_db
+    user: portfolio_user
+
+services:
+  - type: web
+    name: portfolio-api
+    runtime: python
+    plan: free
+    rootDir: BACKEND
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: portfolio-db
+          property: connectionURI
+      - key: BACKEND_CORS_ORIGINS
+        value: https://yourdomain.com,https://www.yourdomain.com
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_UPLOAD_SIZE
+        value: "10485760"
+      - key: FIRST_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: FIRST_SUPERUSER_PASSWORD
+        sync: false
+      - key: FIRST_SUPERUSER_NAME
+        value: Admin User
+      - key: PYTHON_VERSION
+        value: "3.11.7"
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/BACKEND/uploads
+      sizeGB: 1
