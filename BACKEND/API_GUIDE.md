@@ -75,9 +75,9 @@ uvicorn app.main:app --reload
 ```
 
 Server will start at:
-- **API**: http://localhost:8000
-- **Docs**: http://localhost:8000/docs (Interactive Swagger UI)
-- **ReDoc**: http://localhost:8000/redoc (Alternative documentation)
+- **API**: http://localhost:8006
+- **Docs**: http://localhost:8006/docs (Interactive Swagger UI)
+- **ReDoc**: http://localhost:8006/redoc (Alternative documentation)
 
 ---
 
@@ -309,15 +309,15 @@ Content-Type: application/json
 
 ```bash
 # Login
-curl -X POST http://localhost:8000/api/v1/auth/login \
+curl -X POST http://localhost:8006/api/v1/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin@example.com&password=admin123"
 
 # Get projects (save token from login response)
-curl http://localhost:8000/api/v1/projects
+curl http://localhost:8006/api/v1/projects
 
 # Create project (authenticated)
-curl -X POST http://localhost:8000/api/v1/projects \
+curl -X POST http://localhost:8006/api/v1/projects \
   -H "Authorization: Bearer <your_token>" \
   -H "Content-Type: application/json" \
   -d '{"title":"Test Project","description":"Test"}'
@@ -328,7 +328,7 @@ curl -X POST http://localhost:8000/api/v1/projects \
 ```python
 import requests
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "http://localhost:8006/api/v1"
 
 # Login
 response = requests.post(
@@ -348,7 +348,7 @@ print(response.json())
 ### Using JavaScript/Fetch
 
 ```javascript
-const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "http://localhost:8006/api/v1";
 
 // Login
 const loginResponse = await fetch(`${BASE_URL}/auth/login`, {
@@ -432,13 +432,13 @@ MAX_UPLOAD_SIZE=10485760
 
 Once the server is running, visit:
 
-**Swagger UI**: http://localhost:8000/docs
+**Swagger UI**: http://localhost:8006/docs
 - Interactive API testing
 - Try out endpoints directly
 - View request/response schemas
 - Authentication support
 
-**ReDoc**: http://localhost:8000/redoc
+**ReDoc**: http://localhost:8006/redoc
 - Clean, organized documentation
 - Better for reading and understanding
 - Downloadable OpenAPI spec
@@ -472,7 +472,7 @@ Once the server is running, visit:
 ```
 Error: could not connect to server
 ```
-**Solution**: Make sure PostgreSQL is running and DATABASE_URL is correct
+**Solution**: Make sure PostgreSQL is running and `DATABASE_URL` is correct
 
 ### Import Error
 ```
@@ -508,12 +508,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8006"]
 ```
 
 ```bash
 docker build -t portfolio-api .
-docker run -p 8000:8000 portfolio-api
+docker run -p 8006:8006 portfolio-api
 ```
 
 ### Using Gunicorn

@@ -5,7 +5,7 @@ Creates all tables and optionally seeds initial data.
 from sqlalchemy.orm import Session
 from app.core.database import engine, Base, SessionLocal
 from app.core.config import settings
-from app.models import User, Project, Skill, Experience, Education, ThreeConfig, Contact
+from app.models import User, Project, Skill, Experience, Education, ThreeConfig, Contact, SiteContent
 from app.core.security import get_password_hash
 import logging
 
@@ -24,17 +24,24 @@ def create_superuser(db: Session):
     """Create initial superuser if it doesn't exist."""
     logger.info("Checking for superuser...")
     
+    email = settings.FIRST_SUPERUSER_EMAIL or "admin@example.com"
+    password = settings.FIRST_SUPERUSER_PASSWORD or "admin123"
+    name = settings.FIRST_SUPERUSER_NAME or "Admin User"
+
     # Check if any user exists
-    existing_user = db.query(User).filter(User.email == "admin@example.com").first()
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        logger.info("Superuser already exists.")
+        # Update password in case it changed in .env
+        existing_user.hashed_password = get_password_hash(password)
+        db.commit()
+        logger.info("Superuser already exists - password updated from .env.")
         return existing_user
-    
+
     # Create superuser
     superuser = User(
-        email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
-        full_name="Admin User",
+        email=email,
+        hashed_password=get_password_hash(password),
+        full_name=name,
         is_active=True,
         is_superuser=True
     )
@@ -42,8 +49,8 @@ def create_superuser(db: Session):
     db.commit()
     db.refresh(superuser)
     logger.info("✓ Superuser created successfully!")
-    logger.info(f"  Email: admin@example.com")
-    logger.info(f"  Password: admin123")
+    logger.info(f"  Email: {email}")
+    logger.info(f"  Password: {password}")
     logger.info("  ⚠️  IMPORTANT: Change this password immediately!")
     return superuser
 
@@ -77,6 +84,25 @@ def seed_sample_data(db: Session, user: User):
         status="completed"
     )
     db.add(project)
+
+    # Default editable homepage content
+    if not db.query(SiteContent).filter(SiteContent.is_active.is_(True)).first():
+        db.add(
+            SiteContent(
+                user_id=user.id,
+                name="Default Home",
+                is_active=True,
+                display_name=user.full_name or "Harish Kumar",
+                icon_text="3D",
+                eyebrow_text=f"Hello! I am {user.full_name or 'Harish Kumar'}",
+                hero_title="A designer who judges a book by its cover.",
+                hero_subtitle="I build cinematic, interactive experiences for brands and studios.",
+                cta_primary_text="View Work",
+                cta_primary_link="/projects",
+                cta_secondary_text="Hire Me",
+                cta_secondary_link="/contact",
+            )
+        )
     
     db.commit()
     logger.info("✓ Sample data seeded successfully!")

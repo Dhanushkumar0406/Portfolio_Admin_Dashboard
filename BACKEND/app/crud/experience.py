@@ -21,6 +21,19 @@ class CRUDExperience(CRUDBase[Experience, ExperienceCreate, ExperienceUpdate]):
             .all()
         )
 
+    def get_by_slug(
+        self, db: Session, *, profile_slug: str, skip: int = 0, limit: int = 100
+    ) -> List[Experience]:
+        """Get experience entries for a profile slug."""
+        return (
+            db.query(Experience)
+            .filter(Experience.profile_slug == profile_slug)
+            .order_by(Experience.is_current.desc(), Experience.start_date.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def get_current(self, db: Session, *, user_id: int) -> List[Experience]:
         """Get current employment for a user."""
         return (

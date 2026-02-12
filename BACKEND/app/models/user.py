@@ -24,3 +24,4 @@ class User(Base):
     experiences = relationship("Experience", back_populates="user", cascade="all, delete-orphan")
     educations = relationship("Education", back_populates="user", cascade="all, delete-orphan")
     three_configs = relationship("ThreeConfig", back_populates="user", cascade="all, delete-orphan")
+    site_contents = relationship("SiteContent", back_populates="user", cascade="all, delete-orphan")

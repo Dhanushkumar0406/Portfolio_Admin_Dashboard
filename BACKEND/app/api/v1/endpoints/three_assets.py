@@ -3,7 +3,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_superuser
 from app.crud.base import CRUDBase
 from app.models.three_config import ThreeConfig as ThreeConfigModel
 from app.schemas.three_config import ThreeConfig, ThreeConfigCreate, ThreeConfigUpdate, ThreeConfigList
@@ -72,7 +72,7 @@ def create_three_config(
     *,
     db: Session = Depends(get_db),
     config_in: ThreeConfigCreate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> ThreeConfig:
     """Create new 3D configuration (authentication required)."""
     # Check if scene name already exists
@@ -101,7 +101,7 @@ def update_three_config(
     db: Session = Depends(get_db),
     config_id: int,
     config_in: ThreeConfigUpdate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> ThreeConfig:
     """Update 3D configuration (authentication required)."""
     config = three_config_crud.get(db, id=config_id)
@@ -126,7 +126,7 @@ def delete_three_config(
     *,
     db: Session = Depends(get_db),
     config_id: int,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> None:
     """Delete 3D configuration (authentication required)."""
     config = three_config_crud.get(db, id=config_id)

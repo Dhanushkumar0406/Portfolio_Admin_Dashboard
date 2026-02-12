@@ -6,6 +6,7 @@ from app.schemas.experience import Experience, ExperienceCreate, ExperienceUpdat
 from app.schemas.education import Education, EducationCreate, EducationUpdate, EducationList
 from app.schemas.three_config import ThreeConfig, ThreeConfigCreate, ThreeConfigUpdate, ThreeConfigList
 from app.schemas.contact import Contact, ContactCreate, ContactUpdate, ContactList
+from app.schemas.site_content import SiteContent, SiteContentCreate, SiteContentUpdate, SiteContentList
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserLogin", "UserInDB",
@@ -16,4 +17,5 @@ __all__ = [
     "Education", "EducationCreate", "EducationUpdate", "EducationList",
     "ThreeConfig", "ThreeConfigCreate", "ThreeConfigUpdate", "ThreeConfigList",
     "Contact", "ContactCreate", "ContactUpdate", "ContactList",
+    "SiteContent", "SiteContentCreate", "SiteContentUpdate", "SiteContentList",
 ]

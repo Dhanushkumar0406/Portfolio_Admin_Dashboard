@@ -36,7 +36,7 @@ def register(
         HTTPException: If email already registered
     """
     # Check if user exists
-    user = user_crud.user.get_by_email(db, email=user_in.email)
+    user = user_crud.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -44,7 +44,7 @@ def register(
         )
     
     # Create new user
-    user = user_crud.user.create(db, obj_in=user_in)
+    user = user_crud.create(db, obj_in=user_in)
     return user
 
 
@@ -67,7 +67,7 @@ def login(
         HTTPException: If credentials are incorrect
     """
     # Authenticate user
-    user = user_crud.user.authenticate(
+    user = user_crud.authenticate(
         db,
         email=form_data.username,
         password=form_data.password
@@ -80,7 +80,7 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    if not user_crud.user.is_active(user):
+    if not user_crud.is_active(user):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
@@ -89,14 +89,14 @@ def login(
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
-        data={"sub": user.id},
+        data={"sub": str(user.id)},
         expires_delta=access_token_expires
     )
     
     # Create refresh token
     refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     refresh_token = security.create_refresh_token(
-        data={"sub": user.id},
+        data={"sub": str(user.id)},
         expires_delta=refresh_token_expires
     )
     
@@ -144,7 +144,14 @@ def refresh_token(
     
     # Get user
     user_id = payload.get("sub")
-    user = user_crud.user.get(db, id=user_id)
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID in token"
+        )
+    user = user_crud.get(db, id=user_id)
     
     if not user:
         raise HTTPException(
@@ -152,7 +159,7 @@ def refresh_token(
             detail="User not found"
         )
     
-    if not user_crud.user.is_active(user):
+    if not user_crud.is_active(user):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
@@ -161,13 +168,13 @@ def refresh_token(
     # Create new tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
-        data={"sub": user.id},
+        data={"sub": str(user.id)},
         expires_delta=access_token_expires
     )
     
     refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     new_refresh_token = security.create_refresh_token(
-        data={"sub": user.id},
+        data={"sub": str(user.id)},
         expires_delta=refresh_token_expires
     )
     

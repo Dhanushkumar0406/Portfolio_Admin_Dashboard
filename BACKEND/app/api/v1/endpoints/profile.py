@@ -27,7 +27,7 @@ def update_my_profile(
     current_user: UserModel = Depends(get_current_active_user)
 ) -> User:
     """Update current user profile."""
-    user = user_crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    user = user_crud.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
 
@@ -37,7 +37,7 @@ def get_user_profile(
     db: Session = Depends(get_db)
 ) -> User:
     """Get user profile by ID (public endpoint)."""
-    user = user_crud.user.get(db, id=user_id)
+    user = user_crud.get(db, id=user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -3,7 +3,7 @@ Education endpoints - CRUD operations for education and certifications.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_superuser
 from app.crud.base import CRUDBase
 from app.models.education import Education as EducationModel
 from app.schemas.education import Education, EducationCreate, EducationUpdate, EducationList
@@ -47,7 +47,7 @@ def create_education(
     *,
     db: Session = Depends(get_db),
     education_in: EducationCreate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Education:
     """Create new education entry (authentication required)."""
     education_data = education_in.dict()
@@ -65,7 +65,7 @@ def update_education(
     db: Session = Depends(get_db),
     education_id: int,
     education_in: EducationUpdate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Education:
     """Update education (authentication required)."""
     education = education_crud.get(db, id=education_id)
@@ -90,7 +90,7 @@ def delete_education(
     *,
     db: Session = Depends(get_db),
     education_id: int,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> None:
     """Delete education (authentication required)."""
     education = education_crud.get(db, id=education_id)

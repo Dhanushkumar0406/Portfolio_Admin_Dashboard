@@ -4,7 +4,7 @@ Project endpoints - CRUD operations for portfolio projects.
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_active_user, get_optional_user
+from app.api.deps import get_db, get_current_superuser, get_optional_user
 from app.crud import project as project_crud
 from app.schemas.project import Project, ProjectCreate, ProjectUpdate, ProjectList
 from app.models.user import User
@@ -23,13 +23,13 @@ def get_projects(
 ) -> ProjectList:
     """Get all projects with optional filters."""
     if featured:
-        projects = project_crud.project.get_featured(db, skip=skip, limit=limit)
+        projects = project_crud.get_featured(db, skip=skip, limit=limit)
     elif category:
-        projects = project_crud.project.get_by_category(db, category=category, skip=skip, limit=limit)
+        projects = project_crud.get_by_category(db, category=category, skip=skip, limit=limit)
     else:
-        projects = project_crud.project.get_multi(db, skip=skip, limit=limit)
+        projects = project_crud.get_multi(db, skip=skip, limit=limit)
     
-    total = project_crud.project.count(db)
+    total = project_crud.count(db)
     return ProjectList(projects=projects, total=total)
 
 
@@ -39,7 +39,7 @@ def get_project(
     db: Session = Depends(get_db)
 ) -> Project:
     """Get project by ID."""
-    project = project_crud.project.get(db, id=project_id)
+    project = project_crud.get(db, id=project_id)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -53,10 +53,10 @@ def create_project(
     *,
     db: Session = Depends(get_db),
     project_in: ProjectCreate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Project:
     """Create new project (authentication required)."""
-    project = project_crud.project.create_with_user(
+    project = project_crud.create_with_user(
         db, obj_in=project_in, user_id=current_user.id
     )
     return project
@@ -68,10 +68,10 @@ def update_project(
     db: Session = Depends(get_db),
     project_id: int,
     project_in: ProjectUpdate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Project:
     """Update project (authentication required)."""
-    project = project_crud.project.get(db, id=project_id)
+    project = project_crud.get(db, id=project_id)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +84,7 @@ def update_project(
             detail="Not enough permissions"
         )
     
-    project = project_crud.project.update(db, db_obj=project, obj_in=project_in)
+    project = project_crud.update(db, db_obj=project, obj_in=project_in)
     return project
 
 
@@ -93,10 +93,10 @@ def delete_project(
     *,
     db: Session = Depends(get_db),
     project_id: int,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> None:
     """Delete project (authentication required)."""
-    project = project_crud.project.get(db, id=project_id)
+    project = project_crud.get(db, id=project_id)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -109,4 +109,4 @@ def delete_project(
             detail="Not enough permissions"
         )
     
-    project_crud.project.remove(db, id=project_id)
+    project_crud.remove(db, id=project_id)

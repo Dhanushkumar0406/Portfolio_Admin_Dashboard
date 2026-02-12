@@ -16,6 +16,7 @@ class Experience(Base):
     company = Column(String(255), nullable=False)
     company_url = Column(String(500), nullable=True)
     company_logo = Column(String(500), nullable=True)
+    profile_slug = Column(String(100), nullable=True, index=True)
 
     # Position Details
     position = Column(String(255), nullable=False)

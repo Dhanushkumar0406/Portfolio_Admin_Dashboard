@@ -5,6 +5,7 @@ from app.models.experience import Experience
 from app.models.education import Education
 from app.models.three_config import ThreeConfig
 from app.models.contact import Contact
+from app.models.site_content import SiteContent
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "Education",
     "ThreeConfig",
     "Contact",
+    "SiteContent",
 ]

@@ -8,6 +8,7 @@ class ExperienceBase(BaseModel):
     company: str = Field(..., max_length=255)
     company_url: Optional[str] = None
     company_logo: Optional[str] = None
+    profile_slug: Optional[str] = Field(None, max_length=100)
     position: str = Field(..., max_length=255)
     employment_type: Optional[str] = Field(None, max_length=100)
     location: Optional[str] = Field(None, max_length=255)
@@ -31,6 +32,7 @@ class ExperienceUpdate(BaseModel):
     company: Optional[str] = Field(None, max_length=255)
     company_url: Optional[str] = None
     company_logo: Optional[str] = None
+    profile_slug: Optional[str] = Field(None, max_length=100)
     position: Optional[str] = Field(None, max_length=255)
     employment_type: Optional[str] = Field(None, max_length=100)
     location: Optional[str] = Field(None, max_length=255)
@@ -48,6 +50,7 @@ class ExperienceInDBBase(ExperienceBase):
     """Base experience schema for database."""
     id: int
     user_id: int
+    profile_slug: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

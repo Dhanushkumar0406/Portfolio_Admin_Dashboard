@@ -87,16 +87,16 @@ This will:
 
 ```bash
 # Development mode with auto-reload
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8006
 
 # Production mode
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.main:app --host 0.0.0.0 --port 8006 --workers 4
 ```
 
 The API will be available at:
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- API: http://localhost:8006
+- Docs: http://localhost:8006/docs
+- ReDoc: http://localhost:8006/redoc
 
 ## Database Migrations (Alembic)
 

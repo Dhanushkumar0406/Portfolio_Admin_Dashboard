@@ -15,6 +15,10 @@ from app.schemas.token import TokenPayload
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login",
+    auto_error=False
+)
 
 
 def get_db() -> Generator:
@@ -120,7 +124,7 @@ async def get_current_superuser(
 
 def get_optional_user(
     db: Session = Depends(get_db),
-    token: Optional[str] = Depends(oauth2_scheme)
+    token: Optional[str] = Depends(optional_oauth2_scheme)
 ) -> Optional[User]:
     """
     Get current user if token is provided, otherwise return None.

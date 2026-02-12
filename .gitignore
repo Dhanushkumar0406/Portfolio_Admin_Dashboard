@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# Uploads
+uploads/
+
+# VS Code
+.vscode/
+
+# History
+.history/
+
+# Type checking
+.mypy_cache/
+
+# Node
+node_modules/
+
+# Build output
+frontend/dist/
+
+# Claude Code
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
+nul

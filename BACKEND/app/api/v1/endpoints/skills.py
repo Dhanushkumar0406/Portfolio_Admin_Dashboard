@@ -4,7 +4,7 @@ Skills endpoints - CRUD operations for user skills.
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_superuser
 from app.crud import skill as skill_crud
 from app.schemas.skill import Skill, SkillCreate, SkillUpdate, SkillList
 from app.models.user import User
@@ -22,13 +22,13 @@ def get_skills(
 ) -> SkillList:
     """Get all skills with optional filters."""
     if user_id and category:
-        skills = skill_crud.skill.get_by_category(db, user_id=user_id, category=category)
+        skills = skill_crud.get_by_category(db, user_id=user_id, category=category)
     elif user_id:
-        skills = skill_crud.skill.get_by_user(db, user_id=user_id, skip=skip, limit=limit)
+        skills = skill_crud.get_by_user(db, user_id=user_id, skip=skip, limit=limit)
     else:
-        skills = skill_crud.skill.get_multi(db, skip=skip, limit=limit)
+        skills = skill_crud.get_multi(db, skip=skip, limit=limit)
     
-    total = skill_crud.skill.count(db)
+    total = skill_crud.count(db)
     return SkillList(skills=skills, total=total)
 
 
@@ -38,7 +38,7 @@ def get_skill(
     db: Session = Depends(get_db)
 ) -> Skill:
     """Get skill by ID."""
-    skill = skill_crud.skill.get(db, id=skill_id)
+    skill = skill_crud.get(db, id=skill_id)
     if not skill:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -52,10 +52,10 @@ def create_skill(
     *,
     db: Session = Depends(get_db),
     skill_in: SkillCreate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Skill:
     """Create new skill (authentication required)."""
-    skill = skill_crud.skill.create_with_user(
+    skill = skill_crud.create_with_user(
         db, obj_in=skill_in, user_id=current_user.id
     )
     return skill
@@ -67,10 +67,10 @@ def update_skill(
     db: Session = Depends(get_db),
     skill_id: int,
     skill_in: SkillUpdate,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> Skill:
     """Update skill (authentication required)."""
-    skill = skill_crud.skill.get(db, id=skill_id)
+    skill = skill_crud.get(db, id=skill_id)
     if not skill:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -83,7 +83,7 @@ def update_skill(
             detail="Not enough permissions"
         )
     
-    skill = skill_crud.skill.update(db, db_obj=skill, obj_in=skill_in)
+    skill = skill_crud.update(db, db_obj=skill, obj_in=skill_in)
     return skill
 
 
@@ -92,10 +92,10 @@ def delete_skill(
     *,
     db: Session = Depends(get_db),
     skill_id: int,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_superuser)
 ) -> None:
     """Delete skill (authentication required)."""
-    skill = skill_crud.skill.get(db, id=skill_id)
+    skill = skill_crud.get(db, id=skill_id)
     if not skill:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -108,4 +108,4 @@ def delete_skill(
             detail="Not enough permissions"
         )
     
-    skill_crud.skill.remove(db, id=skill_id)
+    skill_crud.remove(db, id=skill_id)
