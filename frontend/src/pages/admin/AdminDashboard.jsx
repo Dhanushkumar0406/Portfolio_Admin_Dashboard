@@ -8,6 +8,8 @@ import {
   FaEnvelope,
   FaCube,
   FaImage,
+  FaGlobe,
+  FaExternalLinkAlt,
 } from 'react-icons/fa'
 import { usePortfolio } from '../../context/PortfolioContext'
 
@@ -90,6 +92,30 @@ const AdminDashboard = () => {
           })}
         </div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <a
+          href={window.location.origin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="glass-card p-5 flex items-center justify-between hover:border-primary/30 transition-all group block"
+        >
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-primary/20 grid place-items-center">
+              <FaGlobe size={20} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-heading">Live Portfolio Website</p>
+              <p className="text-xs text-soft font-mono mt-1">{window.location.origin}</p>
+            </div>
+          </div>
+          <FaExternalLinkAlt size={14} className="text-soft group-hover:text-primary transition-colors" />
+        </a>
+      </motion.div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">

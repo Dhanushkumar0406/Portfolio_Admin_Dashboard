@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FaSave, FaUser, FaPalette, FaCog, FaSyncAlt, FaCheckCircle, FaExclamationCircle, FaShieldAlt } from 'react-icons/fa'
+import { FaSave, FaUser, FaPalette, FaCog, FaSyncAlt, FaCheckCircle, FaExclamationCircle, FaShieldAlt, FaGlobe, FaExternalLinkAlt, FaCopy } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -51,6 +51,12 @@ const Settings = () => {
   })
 
   const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8006/api/v1'
+  const websiteUrl = window.location.origin
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard!')
+  }
 
   useEffect(() => {
     setProfile({
@@ -132,6 +138,64 @@ const Settings = () => {
         className="glass-card p-6"
       >
         <div className="flex items-center gap-3 mb-6">
+          <FaGlobe className="text-primary" size={16} />
+          <h2 className="text-lg font-heading">Live Website</h2>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+            <FaGlobe className="text-primary shrink-0" size={20} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-soft mb-1">Your portfolio is live at</p>
+              <p className="text-sm font-mono text-primary truncate">{websiteUrl}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => copyToClipboard(websiteUrl)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-soft hover:text-white transition-all"
+                title="Copy URL"
+              >
+                <FaCopy size={14} />
+              </button>
+              <a
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-soft hover:text-white transition-all"
+                title="Open website"
+              >
+                <FaExternalLinkAlt size={14} />
+              </a>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-soft mb-1">Backend API</p>
+              <p className="text-sm font-mono text-soft truncate">{apiUrl}</p>
+            </div>
+            <button
+              onClick={() => copyToClipboard(apiUrl)}
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-soft hover:text-white transition-all shrink-0"
+              title="Copy API URL"
+            >
+              <FaCopy size={14} />
+            </button>
+          </div>
+
+          <p className="text-xs text-soft">
+            Manage all your portfolio content from this admin dashboard. Changes appear on the live website immediately.
+          </p>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="glass-card p-6"
+      >
+        <div className="flex items-center gap-3 mb-6">
           <FaUser className="text-primary" size={16} />
           <h2 className="text-lg font-heading">Profile</h2>
         </div>
@@ -160,7 +224,7 @@ const Settings = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.2 }}
         className="glass-card p-6"
       >
         <div className="flex items-center gap-3 mb-6">
@@ -185,7 +249,7 @@ const Settings = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.3 }}
         className="glass-card p-6"
       >
         <div className="flex items-center gap-3 mb-6">
