@@ -1,0 +1,14 @@
+.git
+.claude
+.vscode
+.history
+__pycache__
+*.pyc
+node_modules
+frontend/dist
+frontend/node_modules
+.env
+.env.local
+.env.production
+*.md
+docker-compose.yml
