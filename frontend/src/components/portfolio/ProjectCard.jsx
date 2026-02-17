@@ -2,9 +2,11 @@ import { motion } from 'framer-motion'
 import { FaGithub, FaExternalLinkAlt, FaYoutube } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import uploadService from '../../services/uploadService'
+import { useRoutePrefix, buildPath } from '../../utils/routePrefix'
 
 const ProjectCard = ({ project, index }) => {
   const navigate = useNavigate()
+  const prefix = useRoutePrefix()
   const imageUrl = uploadService.getFileUrl(project.image_url || project.thumbnail_url)
 
   return (
@@ -14,9 +16,9 @@ const ProjectCard = ({ project, index }) => {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
       className="group glass-card overflow-hidden relative cursor-pointer"
-      onClick={() => navigate(`/projects/${project.id}`)}
+      onClick={() => navigate(buildPath(`/projects/${project.id}`, prefix))}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') navigate(`/projects/${project.id}`)
+        if (event.key === 'Enter') navigate(buildPath(`/projects/${project.id}`, prefix))
       }}
       role="button"
       tabIndex={0}

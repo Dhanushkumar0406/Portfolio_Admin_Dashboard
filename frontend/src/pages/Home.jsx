@@ -6,10 +6,12 @@ import Footer from '../components/common/Footer'
 import Button from '../components/common/Button'
 import { usePortfolio } from '../context/PortfolioContext'
 import uploadService from '../services/uploadService'
+import { useRoutePrefix, buildPath } from '../utils/routePrefix'
 
 const Home = () => {
   const navigate = useNavigate()
   const { projects, skills, experience, siteContent } = usePortfolio()
+  const prefix = useRoutePrefix()
 
   const featuredProjects = useMemo(() => {
     const featured = projects.filter((project) => project.featured)
@@ -74,7 +76,7 @@ const Home = () => {
       window.open(url, '_blank', 'noopener,noreferrer')
       return
     }
-    navigate(url)
+    navigate(buildPath(url, prefix))
   }
 
   return (
@@ -182,7 +184,7 @@ const Home = () => {
                 <p className="text-soft text-xs uppercase tracking-[0.35em]">Work Experience</p>
                 <h2 className="text-3xl md:text-4xl font-heading">Where I have shipped</h2>
               </div>
-              <Link to="/about" className="text-sm uppercase tracking-[0.2em] text-primary">
+              <Link to={buildPath('/about', prefix)} className="text-sm uppercase tracking-[0.2em] text-primary">
                 View timeline
               </Link>
             </div>
@@ -224,9 +226,9 @@ const Home = () => {
                 <p className="text-soft text-xs uppercase tracking-[0.35em]">Featured Projects</p>
                 <h2 className="text-3xl md:text-4xl font-heading">Selected work</h2>
               </div>
-              <Link to="/projects" className="text-sm uppercase tracking-[0.2em] text-primary">
-                See all
-              </Link>
+                      <Link to={buildPath('/projects', prefix)} className="text-sm uppercase tracking-[0.2em] text-primary">
+                        See all
+                      </Link>
             </div>
 
             <div className="space-y-16">
@@ -285,7 +287,7 @@ const Home = () => {
                           ))}
                       </div>
                       <div className="mt-6">
-                        <Link to="/projects" className="text-sm uppercase tracking-[0.2em] text-primary">
+                        <Link to={buildPath('/projects', prefix)} className="text-sm uppercase tracking-[0.2em] text-primary">
                           View project
                         </Link>
                       </div>
@@ -309,11 +311,11 @@ const Home = () => {
                 {siteContent?.cta_section_subtitle?.trim() || ''}
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <Button variant="primary" size="lg" onClick={() => navigate('/contact')}>
+                <Button variant="primary" size="lg" onClick={() => navigate(buildPath('/contact', prefix))}>
                   Contact Me
                 </Button>
                 <Link
-                  to="/projects"
+                  to={buildPath('/projects', prefix)}
                   className="px-6 py-3 rounded-lg border border-white/10 text-sm uppercase tracking-[0.2em] hover:border-primary hover:text-primary transition-all"
                 >
                   See Work

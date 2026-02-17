@@ -7,11 +7,13 @@ import Footer from '../components/common/Footer'
 import projectService from '../services/projectService'
 import uploadService from '../services/uploadService'
 import Loader from '../components/common/Loader'
+import { useRoutePrefix, buildPath } from '../utils/routePrefix'
 
 const ProjectDetail = () => {
   const { id } = useParams()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
+  const prefix = useRoutePrefix()
 
   useEffect(() => {
     const loadProject = async () => {
@@ -45,7 +47,7 @@ const ProjectDetail = () => {
         <Navbar />
         <div className="section pt-28 text-center">
           <p className="text-soft text-lg">Project not found.</p>
-          <Link to="/projects" className="text-sm uppercase tracking-[0.2em] text-primary mt-4 inline-block">
+          <Link to={buildPath('/projects', prefix)} className="text-sm uppercase tracking-[0.2em] text-primary mt-4 inline-block">
             Back to projects
           </Link>
         </div>
@@ -64,7 +66,7 @@ const ProjectDetail = () => {
       <main className="flex-1">
         <section className="section pt-28">
           <div className="container">
-            <Link to="/projects" className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary hover:text-primary-light transition-colors">
+            <Link to={buildPath('/projects', prefix)} className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-primary hover:text-primary-light transition-colors">
               <FaArrowLeft size={12} /> Back to projects
             </Link>
 

@@ -4,7 +4,7 @@ Experience endpoints - CRUD operations for work experience.
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_superuser
+from app.api.deps import get_db, get_current_active_user
 from app.crud import experience as experience_crud
 from app.schemas.experience import Experience, ExperienceCreate, ExperienceUpdate, ExperienceList
 from app.models.user import User
@@ -24,14 +24,20 @@ def get_experiences(
     """Get all experience entries with optional filters."""
     if slug:
         experiences = experience_crud.get_by_slug(db, profile_slug=slug, skip=skip, limit=limit)
-    elif user_id and current_only:
+        if not experiences:
+            # Fall back to site content slug -> user_id
+            from app.crud import site_content as site_content_crud  # local import to avoid circular
+            content = site_content_crud.get_by_slug(db, profile_slug=slug)
+            if content:
+                user_id = content.user_id
+    if user_id and current_only:
         experiences = experience_crud.get_current(db, user_id=user_id)
     elif user_id:
         experiences = experience_crud.get_by_user(db, user_id=user_id, skip=skip, limit=limit)
     else:
         experiences = experience_crud.get_multi(db, skip=skip, limit=limit)
     
-    total = experience_crud.count(db)
+    total = len(experiences) if slug or user_id else experience_crud.count(db)
     return ExperienceList(experiences=experiences, total=total)
 
 
@@ -55,7 +61,7 @@ def create_experience(
     *,
     db: Session = Depends(get_db),
     experience_in: ExperienceCreate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Experience:
     """Create new experience entry (authentication required)."""
     experience = experience_crud.create_with_user(
@@ -70,7 +76,7 @@ def update_experience(
     db: Session = Depends(get_db),
     experience_id: int,
     experience_in: ExperienceUpdate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Experience:
     """Update experience (authentication required)."""
     experience = experience_crud.get(db, id=experience_id)
@@ -95,7 +101,7 @@ def delete_experience(
     *,
     db: Session = Depends(get_db),
     experience_id: int,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> None:
     """Delete experience (authentication required)."""
     experience = experience_crud.get(db, id=experience_id)

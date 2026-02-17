@@ -8,12 +8,13 @@ from app.schemas.site_content import SiteContentCreate, SiteContentUpdate
 class CRUDSiteContent(CRUDBase[SiteContent, SiteContentCreate, SiteContentUpdate]):
     """CRUD operations for site content."""
 
-    def get_active(self, db: Session) -> Optional[SiteContent]:
-        """Get the currently active homepage content."""
+    def get_active(self, db: Session, *, user_id: int | None = None) -> Optional[SiteContent]:
+        """Get the currently active homepage content. Scoped to user if provided."""
+        query = db.query(SiteContent).filter(SiteContent.is_active.is_(True))
+        if user_id:
+            query = query.filter(SiteContent.user_id == user_id)
         return (
-            db.query(SiteContent)
-            .filter(SiteContent.is_active.is_(True))
-            .order_by(SiteContent.updated_at.desc().nullslast(), SiteContent.created_at.desc())
+            query.order_by(SiteContent.updated_at.desc().nullslast(), SiteContent.created_at.desc())
             .first()
         )
 
@@ -39,9 +40,12 @@ class CRUDSiteContent(CRUDBase[SiteContent, SiteContentCreate, SiteContentUpdate
             .all()
         )
 
-    def deactivate_all(self, db: Session) -> None:
-        """Set all content rows inactive."""
-        db.query(SiteContent).update({SiteContent.is_active: False})
+    def deactivate_all(self, db: Session, *, user_id: int | None = None) -> None:
+        """Set content rows inactive. If user_id provided, only that user's rows."""
+        query = db.query(SiteContent)
+        if user_id:
+            query = query.filter(SiteContent.user_id == user_id)
+        query.update({SiteContent.is_active: False})
         db.commit()
 
     def create_with_user(
@@ -49,7 +53,7 @@ class CRUDSiteContent(CRUDBase[SiteContent, SiteContentCreate, SiteContentUpdate
     ) -> SiteContent:
         """Create content for user, preserving single active row when needed."""
         if obj_in.is_active:
-            self.deactivate_all(db)
+            self.deactivate_all(db, user_id=user_id)
 
         obj_in_data = obj_in.dict()
         db_obj = SiteContent(**obj_in_data, user_id=user_id)
@@ -59,12 +63,12 @@ class CRUDSiteContent(CRUDBase[SiteContent, SiteContentCreate, SiteContentUpdate
         return db_obj
 
     def set_active(self, db: Session, *, content_id: int) -> Optional[SiteContent]:
-        """Activate one row and deactivate the rest."""
+        """Activate one row and deactivate the rest for that user."""
         content = self.get(db, id=content_id)
         if not content:
             return None
 
-        self.deactivate_all(db)
+        self.deactivate_all(db, user_id=content.user_id)
         content.is_active = True
         db.add(content)
         db.commit()

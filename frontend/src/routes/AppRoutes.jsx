@@ -22,6 +22,7 @@ import ManageContacts from '../pages/admin/ManageContacts'
 import Manage3DAssets from '../pages/admin/Manage3DAssets'
 import ManageHeroContent from '../pages/admin/ManageHeroContent'
 import Settings from '../pages/admin/Settings'
+import UserPortfolioLayout from '../layouts/UserPortfolioLayout'
 
 const AppRoutes = () => {
   return (
@@ -35,6 +36,16 @@ const AppRoutes = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      {/* Public user-specific routes using profile slug */}
+      <Route path="/u/:slug" element={<UserPortfolioLayout />}>
+        <Route index element={<Home />} />
+        <Route path="about" element={<About />} />
+        <Route path="skills" element={<Skills />} />
+        <Route path="projects" element={<Projects />} />
+        <Route path="projects/:id" element={<ProjectDetail />} />
+        <Route path="contact" element={<Contact />} />
+      </Route>
 
       {/* Admin Routes (Protected) */}
       <Route path="/admin" element={<PrivateRoute requireAdmin><AdminLayout /></PrivateRoute>}>

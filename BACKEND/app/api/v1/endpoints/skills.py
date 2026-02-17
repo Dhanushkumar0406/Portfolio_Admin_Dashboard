@@ -4,8 +4,9 @@ Skills endpoints - CRUD operations for user skills.
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_superuser
+from app.api.deps import get_db, get_current_active_user
 from app.crud import skill as skill_crud
+from app.crud import site_content as site_content_crud
 from app.schemas.skill import Skill, SkillCreate, SkillUpdate, SkillList
 from app.models.user import User
 
@@ -18,9 +19,17 @@ def get_skills(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     category: Optional[str] = None,
-    user_id: Optional[int] = None
+    user_id: Optional[int] = None,
+    slug: Optional[str] = Query(None, description="Profile slug filter"),
 ) -> SkillList:
     """Get all skills with optional filters."""
+    if slug:
+        content = site_content_crud.get_by_slug(db, profile_slug=slug)
+        if content:
+            user_id = content.user_id
+        else:
+            return SkillList(skills=[], total=0)
+
     if user_id and category:
         skills = skill_crud.get_by_category(db, user_id=user_id, category=category)
     elif user_id:
@@ -28,7 +37,7 @@ def get_skills(
     else:
         skills = skill_crud.get_multi(db, skip=skip, limit=limit)
     
-    total = skill_crud.count(db)
+    total = len(skills) if slug or user_id else skill_crud.count(db)
     return SkillList(skills=skills, total=total)
 
 
@@ -52,7 +61,7 @@ def create_skill(
     *,
     db: Session = Depends(get_db),
     skill_in: SkillCreate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user),
 ) -> Skill:
     """Create new skill (authentication required)."""
     skill = skill_crud.create_with_user(
@@ -67,7 +76,7 @@ def update_skill(
     db: Session = Depends(get_db),
     skill_id: int,
     skill_in: SkillUpdate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user),
 ) -> Skill:
     """Update skill (authentication required)."""
     skill = skill_crud.get(db, id=skill_id)
@@ -92,7 +101,7 @@ def delete_skill(
     *,
     db: Session = Depends(get_db),
     skill_id: int,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     """Delete skill (authentication required)."""
     skill = skill_crud.get(db, id=skill_id)

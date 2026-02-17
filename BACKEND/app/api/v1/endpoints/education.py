@@ -3,8 +3,9 @@ Education endpoints - CRUD operations for education and certifications.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_superuser
+from app.api.deps import get_db, get_current_active_user
 from app.crud.base import CRUDBase
+from app.crud import site_content as site_content_crud
 from app.models.education import Education as EducationModel
 from app.schemas.education import Education, EducationCreate, EducationUpdate, EducationList
 from app.models.user import User
@@ -19,11 +20,26 @@ education_crud = CRUDBase[EducationModel, EducationCreate, EducationUpdate](Educ
 def get_educations(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100)
+    limit: int = Query(100, ge=1, le=100),
+    slug: str | None = Query(None, description="Profile slug filter"),
 ) -> EducationList:
     """Get all education entries."""
-    educations = education_crud.get_multi(db, skip=skip, limit=limit)
-    total = education_crud.count(db)
+    if slug:
+        content = site_content_crud.get_by_slug(db, profile_slug=slug)
+        if not content:
+            return EducationList(educations=[], total=0)
+        educations = (
+            db.query(EducationModel)
+            .filter(EducationModel.user_id == content.user_id)
+            .order_by(EducationModel.display_order.asc(), EducationModel.start_date.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        total = len(educations)
+    else:
+        educations = education_crud.get_multi(db, skip=skip, limit=limit)
+        total = education_crud.count(db)
     return EducationList(educations=educations, total=total)
 
 
@@ -47,7 +63,7 @@ def create_education(
     *,
     db: Session = Depends(get_db),
     education_in: EducationCreate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Education:
     """Create new education entry (authentication required)."""
     education_data = education_in.dict()
@@ -65,7 +81,7 @@ def update_education(
     db: Session = Depends(get_db),
     education_id: int,
     education_in: EducationUpdate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Education:
     """Update education (authentication required)."""
     education = education_crud.get(db, id=education_id)
@@ -90,7 +106,7 @@ def delete_education(
     *,
     db: Session = Depends(get_db),
     education_id: int,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> None:
     """Delete education (authentication required)."""
     education = education_crud.get(db, id=education_id)

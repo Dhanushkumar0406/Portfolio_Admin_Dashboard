@@ -59,7 +59,8 @@ export const PortfolioProvider = ({ children }) => {
   const fetchProjects = async (params = {}) => {
     try {
       setLoading(true)
-      const data = await projectService.getProjects(params)
+      const query = profileSlug ? { ...params, slug: profileSlug } : params
+      const data = await projectService.getProjects(query)
       setProjects(data)
       return { success: true, data }
     } catch (error) {
@@ -74,7 +75,8 @@ export const PortfolioProvider = ({ children }) => {
     const { silent = false } = options
     try {
       if (!silent) setLoading(true)
-      const data = await skillService.getSkills()
+      const params = profileSlug ? { slug: profileSlug } : {}
+      const data = await skillService.getSkills(params)
       setSkills(data)
       return { success: true, data }
     } catch (error) {
@@ -98,7 +100,7 @@ export const PortfolioProvider = ({ children }) => {
 
   const fetchEducation = async () => {
     try {
-      const data = await profileService.getEducation()
+      const data = await profileService.getEducation(profileSlug)
       setEducation(data)
       return { success: true, data }
     } catch (error) {

@@ -99,7 +99,59 @@ def login(
         data={"sub": str(user.id)},
         expires_delta=refresh_token_expires
     )
-    
+
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
+    )
+
+
+@router.post("/login/admin", response_model=Token, status_code=status.HTTP_200_OK)
+def admin_login(
+    db: Session = Depends(get_db),
+    form_data: OAuth2PasswordRequestForm = Depends()
+) -> Token:
+    """
+    Admin-only login. Fails with 403 if the user is not a superuser.
+    """
+    user = user_crud.authenticate(
+        db,
+        email=form_data.username,
+        password=form_data.password
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    if not user_crud.is_active(user):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=access_token_expires
+    )
+
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = security.create_refresh_token(
+        data={"sub": str(user.id)},
+        expires_delta=refresh_token_expires
+    )
+
     return Token(
         access_token=access_token,
         refresh_token=refresh_token,

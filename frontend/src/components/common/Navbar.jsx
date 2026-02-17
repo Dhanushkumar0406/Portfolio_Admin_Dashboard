@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaCog } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import { usePortfolio } from '../../context/PortfolioContext'
+import { useRoutePrefix, buildPath } from '../../utils/routePrefix'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
   const { isAuthenticated } = useAuth()
-   const { siteContent } = usePortfolio()
+  const { siteContent } = usePortfolio()
+  const prefix = useRoutePrefix()
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -19,7 +21,10 @@ const Navbar = () => {
     { name: 'Contact', path: '/contact' },
   ]
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => {
+    const resolved = buildPath(path, prefix)
+    return location.pathname === resolved
+  }
   const brandInitials = siteContent?.brand_initials || siteContent?.icon_text || ''
   const brandTitle = siteContent?.brand_title || siteContent?.display_name || ''
   const brandTagline = siteContent?.brand_tagline || ''
@@ -31,7 +36,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-ink/70 border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to={buildPath('/', prefix)} className="flex items-center gap-3">
             <span className="h-9 w-9 rounded-xl bg-gradient-primary grid place-items-center text-ink font-bold overflow-hidden">
               {profileImageUrl ? (
                 <img src={profileImageUrl} alt={brandTitle} className="h-full w-full object-cover" />
@@ -49,7 +54,7 @@ const Navbar = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.path}
-                to={link.path}
+                to={buildPath(link.path, prefix)}
                 className={`transition-all duration-300 ${
                   isActive(link.path)
                     ? 'text-primary'
@@ -72,7 +77,7 @@ const Navbar = () => {
               </Link>
             )}
             <Link
-              to={navCtaLink || '/contact'}
+              to={buildPath(navCtaLink || '/contact', prefix)}
               className="px-4 py-2 rounded-full border border-white/10 text-sm uppercase tracking-[0.2em] hover:border-primary hover:text-primary transition-all"
             >
               {navCtaText}
@@ -100,7 +105,7 @@ const Navbar = () => {
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
-                    to={link.path}
+                    to={buildPath(link.path, prefix)}
                     onClick={() => setIsOpen(false)}
                     className={`text-base uppercase tracking-[0.2em] transition-colors duration-300 ${
                       isActive(link.path) ? 'text-primary' : 'text-slate-100/70 hover:text-primary'
@@ -110,7 +115,7 @@ const Navbar = () => {
                   </Link>
                 ))}
                 <Link
-                  to={navCtaLink || '/contact'}
+                  to={buildPath(navCtaLink || '/contact', prefix)}
                   onClick={() => setIsOpen(false)}
                   className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-white/10 text-sm uppercase tracking-[0.2em] hover:border-primary hover:text-primary transition-all"
                 >

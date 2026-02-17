@@ -4,7 +4,7 @@ Site content endpoints - Admin CRUD for homepage hero content.
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_superuser
+from app.api.deps import get_db, get_current_active_user
 from app.crud import site_content as site_content_crud
 from app.models.user import User
 from app.schemas.site_content import (
@@ -23,7 +23,11 @@ def get_public_site_content(
     slug: Optional[str] = Query(None, description="Profile slug"),
 ) -> SiteContent:
     """Get currently active site content for public pages."""
-    content = site_content_crud.get_by_slug(db, profile_slug=slug) if slug else site_content_crud.get_active(db)
+    if slug:
+        content = site_content_crud.get_by_slug(db, profile_slug=slug)
+    else:
+        # If no slug, fall back to first active across users (legacy behavior)
+        content = site_content_crud.get_active(db)
     if not content:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -37,11 +41,15 @@ def list_site_content(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> SiteContentList:
     """List all site content entries (admin only)."""
-    contents = site_content_crud.get_multi(db, skip=skip, limit=limit)
-    total = site_content_crud.count(db)
+    if current_user.is_superuser:
+        contents = site_content_crud.get_multi(db, skip=skip, limit=limit)
+        total = site_content_crud.count(db)
+    else:
+        contents = site_content_crud.get_by_user(db, user_id=current_user.id, skip=skip, limit=limit)
+        total = len(contents)
     return SiteContentList(contents=contents, total=total)
 
 
@@ -49,7 +57,7 @@ def list_site_content(
 def get_site_content(
     content_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> SiteContent:
     """Get site content by ID (admin only)."""
     content = site_content_crud.get(db, id=content_id)
@@ -57,6 +65,11 @@ def get_site_content(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Site content not found",
+        )
+    if not current_user.is_superuser and content.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
     return content
 
@@ -66,7 +79,7 @@ def create_site_content(
     *,
     db: Session = Depends(get_db),
     content_in: SiteContentCreate,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> SiteContent:
     """Create site content (admin only)."""
     content = site_content_crud.create_with_user(
@@ -81,7 +94,7 @@ def update_site_content(
     db: Session = Depends(get_db),
     content_id: int,
     content_in: SiteContentUpdate,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> SiteContent:
     """Update site content (admin only)."""
     content = site_content_crud.get(db, id=content_id)
@@ -89,6 +102,11 @@ def update_site_content(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Site content not found",
+        )
+    if not current_user.is_superuser and content.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
 
     updated = site_content_crud.update(db, db_obj=content, obj_in=content_in)
@@ -104,7 +122,7 @@ def activate_site_content(
     *,
     db: Session = Depends(get_db),
     content_id: int,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> SiteContent:
     """Mark one site content row as active (admin only)."""
     content = site_content_crud.set_active(db, content_id=content_id)
@@ -112,6 +130,11 @@ def activate_site_content(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Site content not found",
+        )
+    if not current_user.is_superuser and content.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
     return content
 
@@ -121,7 +144,7 @@ def delete_site_content(
     *,
     db: Session = Depends(get_db),
     content_id: int,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     """Delete site content row (admin only)."""
     content = site_content_crud.get(db, id=content_id)
@@ -129,6 +152,11 @@ def delete_site_content(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Site content not found",
+        )
+    if not current_user.is_superuser and content.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
 
     site_content_crud.remove(db, id=content_id)

@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { FaGithub, FaLinkedin, FaTwitter, FaYoutube, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa'
 import { usePortfolio } from '../../context/PortfolioContext'
+import { useRoutePrefix, buildPath } from '../../utils/routePrefix'
 
 const Footer = () => {
   const { siteContent } = usePortfolio()
+  const prefix = useRoutePrefix()
   const currentYear = new Date().getFullYear()
   const brandInitials = siteContent?.brand_initials || siteContent?.icon_text || ''
   const brandTitle = siteContent?.brand_title || siteContent?.display_name || ''
@@ -24,7 +26,7 @@ const Footer = () => {
         <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to={buildPath('/', prefix)} className="flex items-center gap-3">
               <span className="h-9 w-9 rounded-xl bg-gradient-primary grid place-items-center text-ink font-bold text-sm overflow-hidden">
                 {profileImageUrl ? (
                   <img src={profileImageUrl} alt={brandTitle} className="h-full w-full object-cover" />
@@ -72,7 +74,7 @@ const Footer = () => {
                 { name: 'Contact', path: '/contact' },
               ].map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="text-sm text-muted hover:text-primary transition-colors">
+                  <Link to={buildPath(link.path, prefix)} className="text-sm text-muted hover:text-primary transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -89,7 +91,7 @@ const Footer = () => {
               <li>{footerAvailability}</li>
               <li className="pt-2">
                 <Link
-                  to="/contact"
+                  to={buildPath('/contact', prefix)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-xs uppercase tracking-[0.2em] hover:border-primary hover:text-primary transition-all"
                 >
                   Send a message

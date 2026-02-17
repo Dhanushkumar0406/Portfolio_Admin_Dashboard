@@ -4,8 +4,9 @@ Project endpoints - CRUD operations for portfolio projects.
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_superuser, get_optional_user
+from app.api.deps import get_db, get_current_active_user, get_optional_user
 from app.crud import project as project_crud
+from app.crud import site_content as site_content_crud
 from app.schemas.project import Project, ProjectCreate, ProjectUpdate, ProjectList
 from app.models.user import User
 
@@ -19,17 +20,32 @@ def get_projects(
     limit: int = Query(100, ge=1, le=100),
     category: Optional[str] = None,
     featured: Optional[bool] = None,
+    slug: Optional[str] = Query(None, description="Profile slug filter"),
     current_user: Optional[User] = Depends(get_optional_user)
 ) -> ProjectList:
     """Get all projects with optional filters."""
+    if slug:
+        content = site_content_crud.get_by_slug(db, profile_slug=slug)
+        if content:
+            user_id = content.user_id
+        else:
+            return ProjectList(projects=[], total=0)
+    else:
+        user_id = None
+
     if featured:
-        projects = project_crud.get_featured(db, skip=skip, limit=limit)
+        projects = project_crud.get_featured(db, skip=skip, limit=limit, user_id=user_id)
     elif category:
-        projects = project_crud.get_by_category(db, category=category, skip=skip, limit=limit)
+        if user_id:
+            projects = project_crud.get_by_category(db, category=category, skip=skip, limit=limit, user_id=user_id)
+        else:
+            projects = project_crud.get_by_category(db, category=category, skip=skip, limit=limit)
+    elif user_id:
+        projects = project_crud.get_by_user(db, user_id=user_id, skip=skip, limit=limit)
     else:
         projects = project_crud.get_multi(db, skip=skip, limit=limit)
     
-    total = project_crud.count(db)
+    total = len(projects) if user_id else project_crud.count(db)
     return ProjectList(projects=projects, total=total)
 
 
@@ -53,7 +69,7 @@ def create_project(
     *,
     db: Session = Depends(get_db),
     project_in: ProjectCreate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Project:
     """Create new project (authentication required)."""
     project = project_crud.create_with_user(
@@ -68,7 +84,7 @@ def update_project(
     db: Session = Depends(get_db),
     project_id: int,
     project_in: ProjectUpdate,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> Project:
     """Update project (authentication required)."""
     project = project_crud.get(db, id=project_id)
@@ -93,7 +109,7 @@ def delete_project(
     *,
     db: Session = Depends(get_db),
     project_id: int,
-    current_user: User = Depends(get_current_superuser)
+    current_user: User = Depends(get_current_active_user)
 ) -> None:
     """Delete project (authentication required)."""
     project = project_crud.get(db, id=project_id)

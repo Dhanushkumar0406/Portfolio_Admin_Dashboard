@@ -21,25 +21,43 @@ class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdate]):
             .all()
         )
 
-    def get_featured(self, db: Session, *, skip: int = 0, limit: int = 10) -> List[Project]:
-        """Get featured projects."""
-        return (
+    def get_featured(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 10,
+        user_id: int | None = None
+    ) -> List[Project]:
+        """Get featured projects, optionally scoped to a user."""
+        query = (
             db.query(Project)
             .filter(Project.featured == True)
-            .order_by(Project.display_order.asc(), Project.created_at.desc())
+        )
+        if user_id:
+            query = query.filter(Project.user_id == user_id)
+        return (
+            query.order_by(Project.display_order.asc(), Project.created_at.desc())
             .offset(skip)
             .limit(limit)
             .all()
         )
 
     def get_by_category(
-        self, db: Session, *, category: str, skip: int = 0, limit: int = 100
+        self,
+        db: Session,
+        *,
+        category: str,
+        skip: int = 0,
+        limit: int = 100,
+        user_id: int | None = None
     ) -> List[Project]:
         """Get projects by category."""
+        query = db.query(Project).filter(Project.category == category)
+        if user_id:
+            query = query.filter(Project.user_id == user_id)
         return (
-            db.query(Project)
-            .filter(Project.category == category)
-            .order_by(Project.display_order.asc(), Project.created_at.desc())
+            query.order_by(Project.display_order.asc(), Project.created_at.desc())
             .offset(skip)
             .limit(limit)
             .all()

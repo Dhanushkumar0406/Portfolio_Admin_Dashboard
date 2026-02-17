@@ -78,8 +78,10 @@ const profileService = {
    * Get all education entries
    * @returns {Promise} List of education
    */
-  async getEducation() {
-    const response = await api.get('/education/')
+  async getEducation(profileSlug) {
+    const response = await api.get('/education/', {
+      params: profileSlug ? { slug: profileSlug } : {},
+    })
     const data = response.data
     if (Array.isArray(data)) return data
     return data?.educations ?? []
